@@ -1,5 +1,5 @@
-// The 'zpassport_leo' program.
-program zpassport_v1.aleo {
+// The 'zPassport' program.
+program zpassport_v001.aleo {
     // The ZPass record
     record ZPassport {
         owner: address,
@@ -54,7 +54,7 @@ program zpassport_v1.aleo {
         //TODO: Add RSA/ECDSA signature verification once possible
 
         // Compute commitment to prevent double issuance
-        let commit: group = BHP256::commit_to_group(self.caller, pub.salt);
+        let commit: group = BHP256::commit_to_group(pri, pub.salt);
 
         // Return the ZPass record and pass the commitment to store in the mapping
         return (
@@ -70,10 +70,11 @@ program zpassport_v1.aleo {
     async function issue_finalize(
         public commit: group
     ) {
-        // Ensure the commitment is not already issued
-        assert_eq(issued.get_or_use(commit, false), false);
 
         //TODO: Check issuing state certificates used are valid
+
+        // Ensure the commitment is not already issued
+        assert_eq(issued.get_or_use(commit, false), false);
 
         // Store the commitment in the mapping
         issued.set(commit, true);
@@ -88,7 +89,7 @@ program zpassport_v1.aleo {
             private_credentials : zpassport.private_credentials,
             public_credentials : zpassport.public_credentials
         };
-        let commit: group = BHP256::commit_to_group(credentials, zpassport.public_credentials.salt);
+        let commit: group = BHP256::commit_to_group(zpassport.private_credentials, zpassport.public_credentials.salt);
 
         return invalidate_finalize(commit);
     }
@@ -103,7 +104,7 @@ program zpassport_v1.aleo {
     async transition is_invalid(
         credentials: FullCredentials
     ) -> Future {
-        let commit: group = BHP256::commit_to_group(credentials, credentials.public_credentials.salt);
+        let commit: group = BHP256::commit_to_group(credentials.private_credentials, credentials.public_credentials.salt);
 
         return is_invalid_finalize(commit);
     }

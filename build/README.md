@@ -1,4 +1,4 @@
-# zpassport_v1.aleo
+# zpassport_v001.aleo
 
 ## Build Guide
 

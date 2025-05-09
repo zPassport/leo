@@ -1,10 +1,11 @@
-program zpassport_v1.aleo;
+program zpassport_v001.aleo;
 
 struct PrivateCredentials:
     issuer as address;
-    subject as address;
+    name as field;
+    passport_number as u32;
+    nationality as u8;
     dob as u32;
-    nationality as field;
     expiry as u32;
 
 struct PublicCredentials:
@@ -32,18 +33,13 @@ mapping issuance_count:
     value as u128.public;
 
 function issue:
-    input r0 as signature.private;
-    input r1 as PrivateCredentials.private;
-    input r2 as PublicCredentials.public;
-    cast r1 r2 into r3 as FullCredentials;
-    hash.psd2 r3 into r4 as field;
-    sign.verify r0 r1.issuer r4 into r5;
-    assert.eq r5 true;
-    commit.bhp256 self.caller r2.salt into r6 as group;
-    cast self.caller r1 r2 into r7 as ZPassport.record;
-    async issue r6 into r8;
-    output r7 as ZPassport.record;
-    output r8 as zpassport_v1.aleo/issue.future;
+    input r0 as PrivateCredentials.private;
+    input r1 as PublicCredentials.public;
+    commit.bhp256 r0 r1.salt into r2 as group;
+    cast self.caller r0 r1 into r3 as ZPassport.record;
+    async issue r2 into r4;
+    output r3 as ZPassport.record;
+    output r4 as zpassport_v001.aleo/issue.future;
 
 finalize issue:
     input r0 as group.public;
@@ -56,10 +52,9 @@ finalize issue:
 
 function invalidate:
     input r0 as ZPassport.record;
-    cast r0.private_credentials r0.public_credentials into r1 as FullCredentials;
-    commit.bhp256 r1 r0.public_credentials.salt into r2 as group;
-    async invalidate r2 into r3;
-    output r3 as zpassport_v1.aleo/invalidate.future;
+    commit.bhp256 r0.private_credentials r0.public_credentials.salt into r1 as group;
+    async invalidate r1 into r2;
+    output r2 as zpassport_v001.aleo/invalidate.future;
 
 finalize invalidate:
     input r0 as group.public;
@@ -67,9 +62,9 @@ finalize invalidate:
 
 function is_invalid:
     input r0 as FullCredentials.private;
-    commit.bhp256 r0 r0.public_credentials.salt into r1 as group;
+    commit.bhp256 r0.private_credentials r0.public_credentials.salt into r1 as group;
     async is_invalid r1 into r2;
-    output r2 as zpassport_v1.aleo/is_invalid.future;
+    output r2 as zpassport_v001.aleo/is_invalid.future;
 
 finalize is_invalid:
     input r0 as group.public;
